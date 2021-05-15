@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="f699eccc-4524-463f-9a02-9762492156f8" file="OrderDetails-DEV.yaml" />
+	<error-handler name="OrderDetails-GlobalError_Handler" doc:id="185b1def-d46b-4249-a015-b57358754eb1" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8eb43f55-8bb2-4ac6-baac-6848f75b83e7" type="DB:CONNECTIVITY">
+			<set-payload value='#["Check the database connection"]' doc:name="Set Payload" doc:id="1f1f3b8e-0f5f-48ae-8cfc-9a0002ca48a2" />
+			<set-variable value="500" doc:name="HTTPStatus" doc:id="12932c15-ab16-4e77-8368-28be1f6644eb" variableName="HTTPStatus"/>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e76344f3-6a7e-4538-a91a-71edb177c617" type="DB:BAD_SQL_SYNTAX">
+			<set-payload value='#["Check the SQL query syntax"]' doc:name="Set Payload" doc:id="eac5488f-9b4b-46b1-b3df-969f17b02ec9" />
+			<set-variable value="500" doc:name="HTTPStatus" doc:id="80c23956-e15c-4610-bd24-ef65c4bf41e4" variableName="HTTPStatus"/>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a0c53671-744d-4d66-b805-7e4d8044b181" when='#[error.errorType=="GETBYID:QUERY_EXECUTION"]'>
+			<set-payload value='#["Check the query in the GETBYID flow"]' doc:name="Set Payload" doc:id="4dfa07a3-f050-44d4-9675-2852b36221f0" />
+			<set-variable value="500" doc:name="HTTPStatus" doc:id="52e17f7d-0ddb-40ac-9c43-6c61917b50bc" variableName="HTTPStatus"/>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="028ea06e-0b7e-414c-a7db-aedb299fca6c" when='#[error.errorType=="POST:QUERY_EXECUTION"]'>
+			<set-payload value='#["Check the query in the POST flow"]' doc:name="Set Payload" doc:id="8d3479b2-a6e6-4b9e-b6d0-a110982fc8da" />
+			<set-variable value="500" doc:name="HTTPStatus" doc:id="9a122c13-788f-42f6-b0c4-7098bf073ab9" variableName="HTTPStatus"/>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="afc3d99f-9262-4bd2-894f-df51471ee1a0" type="ANY">
+			<set-payload value='#["Error exists in the project"]' doc:name="Set Payload" doc:id="49fec4e1-2a91-4fa7-840d-2d1210614de0" />
+			<set-variable value="500" doc:name="HTTPStatus" doc:id="591fe3bf-dbe6-478f-a7a0-8df8fe21368f" variableName="HTTPStatus"/>
+		</on-error-continue>
+	</error-handler>
+	
+	 <http:listener-config name="orderdetails-api-httpListenerConfig">
+        <http:listener-connection host="${http.host}" port="${http.port}" />
+    </http:listener-config>
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="f4fc3ffa-399b-44d6-948e-99a0ea50222c" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	
+	
+	
+	
+	
+	
+	
+</mule>

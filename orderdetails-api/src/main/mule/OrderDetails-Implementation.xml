@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	<configuration doc:name="Configuration" doc:id="0a56ca0e-14f3-4198-8ac1-5d9192ae870a" defaultErrorHandler-ref="OrderDetails-GlobalError_Handler" />
+	<flow name="OrderDetails-GetAllFlow" doc:id="33d6b66e-393e-4bc1-9e1e-dd9af19d150b" >
+		<choice doc:name="Choice" doc:id="28b1bc8c-78e0-405d-bb06-db3c4338e36d" >
+			<when expression="#[attributes.queryParams.'quantityOrdered' !=null]">
+				<db:select doc:name="OrderDetails-Database" doc:id="4075a898-9e61-455e-a643-6b93c28113e1" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from OrderDetails where quantityOrdered = :quantityOrdered;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	'quantityOrdered': attributes.queryParams.'quantityOrdered'
+}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="OrderDetails-Database" doc:id="35013b25-98f0-46f6-b423-ef00e427bbd1" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from OrderDetails]]></db:sql>
+		</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Json Format &amp; DataWeave" doc:id="061014c1-1eef-4b47-995b-ab9df964e088" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	orderNumber: payload01.orderNumber as String,
+	productCode: payload01.productCode,
+	quantityOrdered: payload01.quantityOrdered default 0,
+	priceEach: payload01.priceEach default 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="OrderDetails-GetByIDFlow" doc:id="11666943-c59a-4527-858b-e0f35d972952" >
+		<db:query-single doc:name="OrderDetails-Database" doc:id="abbd5673-7695-413c-ad6a-a42a911564e0" config-ref="Database_Config">
+			<error-mapping sourceType="DB:QUERY_EXECUTION" targetType="GETBYID:QUERY_EXECUTION" />
+			<db:sql><![CDATA[select * from OrderDetails where orderNumber = :orderNumber;]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	'orderNumber': vars.orderNumber
+}]]]></db:input-parameters>
+		</db:query-single>
+		<ee:transform doc:name="Json Format &amp; Dataweave" doc:id="84699764-5fb7-4cc8-b513-9a4208913c73">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	orderNumber: payload.orderNumber as String,
+	productCode: payload.productCode,
+	quantityOrdered: payload.quantityOrdered default 0,
+	priceEach: payload.priceEach default 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="OrderDetails-DeleteByIDFlow" doc:id="7a3992a6-e1b3-4f3b-95e7-97c0e6be36ee" >
+		<db:delete doc:name="OrderDetails-Database" doc:id="ccf8c10d-3d15-499b-9a4d-3006ede7525d" config-ref="Database_Config">
+			<db:sql ><![CDATA[delete from OrderDetails where orderNumber = :orderNumber;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'orderNumber':vars.orderNumber
+}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Json Format &amp; Relevant Message" doc:id="2ce27462-a37c-44f6-b825-93999f17d007">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"OrderDetails for the given ID are deleted"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<sub-flow name="OrderDetails-VariableSub_Flow" doc:id="95bf7612-b6f9-423f-8e2c-89a38fc9bf60" >
+		<set-variable value="#[payload.'productCode']" doc:name="productCode" doc:id="cd79e90e-f39c-47b4-977d-263f970503ad" variableName="productCode"/>
+		<set-variable value="#[payload.'quantityOrdered']" doc:name="quantityOrdered" doc:id="b0a8937f-d118-4d0b-a628-c9a019139c8f" variableName="quantityOrdered"/>
+		<set-variable value="#[payload.'priceEach']" doc:name="priceEach" doc:id="1f8361db-e95c-41e6-8d4b-0ced22da4e0c" variableName="priceEach"/>
+	</sub-flow>
+	<flow name="OrderDetails-PatchByIDFlow" doc:id="02467edb-0146-4c6a-8952-26145fec717b" >
+		<flow-ref doc:name="OrderDetails-VariableSub_Flow" doc:id="f5172643-3e1f-4994-816a-89f9645c8a47" name="OrderDetails-VariableSub_Flow"/>
+		<db:update doc:name="OrderDetails-Database" doc:id="59ecfe8d-73c4-4100-a030-0b09707767ae" config-ref="Database_Config">
+			<db:sql ><![CDATA[update OrderDetails set quantityOrdered = :quantityOrdered where orderNumber = :orderNumber;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'orderNumber':vars.orderNumber,
+	'quantityOrdered':vars.quantityOrdered
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Json Format &amp; Relevant Message" doc:id="6468b87d-90b0-4a06-9b0a-dcb89015b48b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Data of Quantity Ordered is updated for given ID"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="OrderDetails-PostFlow" doc:id="0f47838e-7f1b-445a-a069-f94fa5cfe074" >
+		<flow-ref doc:name="OrderDetails-VariableSub_Flow" doc:id="f4929d5b-cb79-44f6-bc44-f42fa05a9907" name="OrderDetails-VariableSub_Flow"/>
+		<db:insert doc:name="OrderDetails-Database" doc:id="decce4d6-9c49-45bf-837b-e69ae7ebeca4" config-ref="Database_Config">
+			<db:sql><![CDATA[insert into OrderDetails values(:orderNumber,:productCode,:quantityOrdered,:priceEach);]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	'orderNumber': vars.orderNumber,
+	'productCode': vars.productCode,
+	'quantityOrdered':vars.quantityOrdered,
+	'priceEach': vars.priceEach
+}]]]></db:input-parameters>
+		</db:insert>
+		<db:query-single doc:name="OrderDetails-Database" doc:id="dfb99ae4-4fa9-4220-9f26-5a357a15f957" config-ref="Database_Config">
+			<error-mapping sourceType="DB:QUERY_EXECUTION" targetType="POST:QUERY_EXECUTION" />
+			<db:sql ><![CDATA[select max(orderNumber) from OrderDetails;]]></db:sql>
+		</db:query-single>
+		<ee:transform doc:name="Json Format &amp; Relevant Message" doc:id="a7fc5d72-bfe8-4327-bd61-78b34b2348bf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "OrderDetails are added" ++ payload."max(orderNumber)"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value='201' doc:name="httpStatus" doc:id="909b2b7d-cb27-4823-a5b0-04c1add70d2f" variableName="httpStatus"/>
+	</flow>
+	<flow name="OrderDetails-PutFlow" doc:id="dc2c430d-daaf-43a7-b582-a9f967c4218a" >
+		<flow-ref doc:name="OrderDetails-VariableSub_Flow" doc:id="90951fe3-959a-4419-a4b6-ce354874c022" name="OrderDetails-VariableSub_Flow"/>
+		<db:query-single doc:name="OrderDetails-Database" doc:id="7c09e4cc-0548-4f8f-a9e8-949cbac21aa8" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from OrderDetails where orderNumber = :orderNumber;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'orderNumber': vars.orderNumber
+}]]]></db:input-parameters>
+		</db:query-single>
+		<choice doc:name="Choice" doc:id="9b42fc94-219f-4b64-b9ae-9a38a424c5c7" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+				<db:update doc:name="OrderDetails-Database" doc:id="6551ef50-021e-42a2-9982-1fc21b476041" config-ref="Database_Config">
+					<db:sql ><![CDATA[update OrderDetails set productCode = :productCode, quantityOrdered = :quantityOrdered, priceEach = :priceEach
+ where orderNumber = :orderNumber;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	'orderNumber':vars.orderNumber,
+	'productCode': vars.productCode,
+	'quantityOrdered': vars.quantityOrdered,
+	'priceEach': vars.priceEach
+}]]]></db:input-parameters>
+				</db:update>
+			</when>
+			<otherwise >
+				<db:insert doc:name="OrderDetails-Database" doc:id="80e95e92-44a4-44bb-905f-56733b7baf06" config-ref="Database_Config">
+					<db:sql ><![CDATA[insert into OrderDetails values(:orderNumber,:productCode,:quantityOrdered,:priceEach);]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	'orderNumber': vars.orderNumber,
+	'productCode': vars.productCode,
+	'quantityOrdered':vars.quantityOrdered,
+	'priceEach': vars.priceEach
+}]]]></db:input-parameters>
+				</db:insert>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Json Format &amp; Relevant Message" doc:id="d5f2727c-5453-4bfd-8334-5001283f50b0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "OrderDetails are updated"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="201" doc:name="HTTPStatus" doc:id="0b99efc3-6366-4f1a-ae2e-b2995d3da263" variableName="HTTPStatus"/>
+	</flow>
+</mule>
