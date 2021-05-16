@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="OrderDetails-Implementation-test-suite.xml" />
+	<munit:test name="OrderDetails-Implementation-test-suite-OrderDetails-GetAllFlowTest" doc:id="e8b016e1-1e0d-43b1-a859-89af3a094865" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="50e3a1d3-2e39-43d6-9078-577d6d343aa2" />
+			<flow-ref doc:name="Flow-ref to OrderDetails-GetAllFlow" doc:id="0e8f0532-5e5c-4f01-a5df-0bddfda60977" name="OrderDetails-GetAllFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="95427a29-a6b0-43c3-b6f6-5f1df6ced8dd" message='"Payload cannot be null"' expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="OrderDetails-Implementation-test-suite-OrderDetails-GetByIDFlowTest" doc:id="c46fb994-6e01-4571-aea5-de8d4267c677" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="6c547f9e-d23e-4af4-94b1-ac0eb51c2364" />
+			<flow-ref doc:name="Flow-ref to OrderDetails-GetByIDFlow" doc:id="cb1ff6f1-da25-4159-9a48-3add9a78dd4e" name="OrderDetails-GetByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="68661fd5-8083-4cab-b72f-470b1290f247" is="#[MunitTools::notNullValue()]" message='"Payload cannot be null"' expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="OrderDetails-Implementation-test-suite-OrderDetails-DeleteByIDFlowTest" doc:id="3d137c4e-c745-4cf9-93ac-2421152df428" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="e635600e-ef8e-4a91-9a40-b544fabc16c4" />
+			<flow-ref doc:name="Flow-ref to OrderDetails-DeleteByIDFlow" doc:id="6747619b-388a-4d35-8ac0-aad37b24f2b5" name="OrderDetails-DeleteByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="f8b9ed80-32de-4114-b464-7a40489dc41a" actual="#[payload.message]" expected='#["OrderDetails for the given ID are deleted"]' message='"Check the deletebyID flow"'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="OrderDetails-Implementation-test-suite-OrderDetails-PatchByIDFlowTest" doc:id="2ebcf735-e8dc-4fc0-b87c-fd6e13082d32" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="9b61cea3-5829-4281-a3ad-a94114fa65e0" />
+			<flow-ref doc:name="Flow-ref to OrderDetails-PatchByIDFlow" doc:id="e37a0828-6671-45dc-b111-49eb81d03730" name="OrderDetails-PatchByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="16cf0394-5b8a-44e0-8dba-e60ac5daccd7" actual="#[payload.message]" message='"Check the patchbyID flow"' expected='#["Data of Quantity Ordered is updated for given ID"]'/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
