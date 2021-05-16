@@ -33,6 +33,17 @@
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
+				<cloudHubDeployment>
+                        <uri>https://anypoint.mulesoft.com</uri>
+                        <username>ShrutiHP19</username>
+                        <password>Shruti@19</password>
+                        <environment>Sandbox</environment>
+                        <muleVersion>4.3.0</muleVersion>
+                        <workers>1</workers>
+                        <workerType>Micro</workerType>
+                        <applicationName>OrderDetailsAPI-project-shrutihp</applicationName>
+                        <objectStoreV2>true</objectStoreV2>
+                    </cloudHubDeployment>
 				<sharedLibraries>
                         <sharedLibrary>
                             <groupId>mysql</groupId>
